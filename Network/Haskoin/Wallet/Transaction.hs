@@ -1,9 +1,9 @@
-module Network.Haskoin.Wallet.Transaction 
-( 
+module Network.Haskoin.Wallet.Transaction
+(
 -- *Database transactions
   txPage
 , addrTxPage
-, getTx 
+, getTx
 , getAccountTx
 , importTx
 , importNetTx
@@ -14,6 +14,7 @@ module Network.Haskoin.Wallet.Transaction
 , killTxs
 , reviveTx
 , getPendingTxs
+, deleteAccountTx
 
 -- *Database blocks
 , importMerkles
@@ -61,13 +62,13 @@ import qualified Database.Persist as P
     , PersistEntityBackend
     , (=.), (==.), (<.), (>.), (<-.)
     )
-import Database.Esqueleto 
+import Database.Esqueleto
     ( Value(..), Esqueleto, SqlQuery, SqlExpr, SqlBackend, SqlEntity
     , InnerJoin(..), LeftOuterJoin(..), OrderBy, update, sum_, groupBy
     , select, from, where_, val, valList, sub_select, countRows, count
     , orderBy, limit, asc, desc, set, offset, selectSource, updateCount
     , subList_select, in_, unValue, max_, not_, coalesceDefault, just, on
-    , case_, when_, then_, else_, distinct
+    , case_, when_, then_, else_, distinct, delete
     , (^.), (=.), (==.), (&&.), (||.), (<.)
     , (<=.), (>.), (>=.), (-.), (*.), (?.), (!=.)
     -- Reexports from Database.Persist
@@ -261,11 +262,20 @@ getAccountTx ai txid = do
         _ -> liftIO . throwIO $ WalletException $ unwords
             [ "Transaction does not exist:", encodeTxHashLE txid ]
 
+deleteAccountTx :: MonadIO m
+             => KeyRingAccountId -> TxHash -> SqlPersistT m ()
+deleteAccountTx ai txid = do
+     E.delete $ from $ (\t -> do
+              where_ (    t ^. KeyRingTxAccount ==. val ai
+                      &&. t ^. KeyRingTxHash    ==. val txid
+                      )
+              return ())
+
 -- Helper function to get all the pending transactions from the database. It is
 -- used to re-broadcast pending transactions in the wallet that have not been
 -- included into blocks yet.
 getPendingTxs :: MonadIO m => Int -> SqlPersistT m [Tx]
-getPendingTxs i = 
+getPendingTxs i =
     liftM (map unValue) $ select $ from $ \t -> do
         where_ $ t ^. KeyRingTxConfidence ==. val TxPending
         limit $ fromIntegral i

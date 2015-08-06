@@ -22,6 +22,7 @@ module Network.Haskoin.Wallet.Client.Commands
 , cmdSign
 , cmdBalance
 , cmdGetTx
+, cmdRmTx
 , cmdGetOffline
 , cmdSignOffline
 , cmdRescan
@@ -321,11 +322,19 @@ cmdGetTx :: String -> String -> Handler ()
 cmdGetTx name tidStr = case tidM of
     Just tid -> do
         k <- R.asks configKeyRing
-        sendZmq (GetTxR k (pack name) tid) $ 
+        sendZmq (GetTxR k (pack name) tid) $
             \(JsonWithAccount _ _ tx) -> putStr $ printTx tx
     _ -> error "Could not parse txid"
   where
     tidM = decodeTxHashLE tidStr
+
+cmdRmTx :: String -> String -> Handler ()
+cmdRmTx name tidStr = case tidM of
+    Just tid -> do
+      k <- R.asks configKeyRing
+      sendZmq (RmTxR k (pack name) tid) $ (\() -> (putStr $ "TX deleted."))
+    _ -> error "Could not parse txid"
+ where tidM = decodeTxHashLE tidStr
 
 cmdRescan :: [String] -> Handler ()
 cmdRescan timeLs =

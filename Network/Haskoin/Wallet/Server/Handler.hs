@@ -486,6 +486,21 @@ postTxsR keyRingName name action = do
         , withAccountData    = toJsonTx txRes (Just height)
         }
 
+rmTxR :: (MonadLogger m, MonadBaseControl IO m, MonadIO m)
+       => KeyRingName -> AccountName -> TxHash -> Handler m (Maybe Value)
+rmTxR keyRingName name txid = do
+    $(logInfo) $ format $ unlines
+        [ "rmTxsR"
+        , "  KeyRing name: " ++ unpack keyRingName
+        , "  Account name: " ++ unpack name
+        , "  Txid        : " ++ encodeTxHashLE txid
+        ]
+    runDB $ do
+      (keyRing, Entity ai acc) <- getAccount keyRingName name
+      deleteAccountTx ai txid
+    return $ Just $ toJSON ()
+
+
 getTxR :: (MonadLogger m, MonadBaseControl IO m, MonadIO m)
        => KeyRingName -> AccountName -> TxHash -> Handler m (Maybe Value)
 getTxR keyRingName name txid = do

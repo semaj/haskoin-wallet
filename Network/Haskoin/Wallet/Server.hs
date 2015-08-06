@@ -346,6 +346,7 @@ dispatchRequest req = liftM ResponseValid $ case req of
     GetAddrTxsR r n i t p            -> getAddrTxsR r n i t p
     PostTxsR r n a                   -> postTxsR r n a
     GetTxR r n h                     -> getTxR r n h
+    RmTxR r n h                      -> rmTxR r n h
     GetOfflineTxR r n h              -> getOfflineTxR r n h
     PostOfflineTxR r n t cs          -> postOfflineTxR r n t cs
     GetBalanceR r n mc o             -> getBalanceR r n mc o

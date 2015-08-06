@@ -1,4 +1,4 @@
-module Network.Haskoin.Wallet.Client.Commands 
+module Network.Haskoin.Wallet.Client.Commands
 ( cmdStart
 , cmdStop
 , cmdNewKeyRing
@@ -32,7 +32,7 @@ module Network.Haskoin.Wallet.Client.Commands
 )
 where
 
-import System.ZMQ4.Monadic 
+import System.ZMQ4.Monadic
     ( Req(..)
     , runZMQ
     , socket
@@ -56,7 +56,7 @@ import qualified Data.Aeson.Encode.Pretty as JSON
     , encodePretty'
     , defConfig
     )
-import Data.Aeson 
+import Data.Aeson
     ( Value(..)
     , FromJSON
     , ToJSON
@@ -88,7 +88,7 @@ cmdStart = do
     liftIO $ runSPVServer cfg
     liftIO $ putStrLn "Process started"
 
--- hw stop [config] 
+-- hw stop [config]
 cmdStop :: Handler ()
 cmdStop = R.ask >>= \cfg -> liftIO $ do
     stopSPVServer cfg
@@ -115,7 +115,7 @@ cmdKeyRings = sendZmq GetKeyRingsR $ \ks -> do
 cmdNewAcc :: String -> Handler ()
 cmdNewAcc name = do
     k <- R.asks configKeyRing
-    sendZmq (PostAccountsR k newAcc) $ 
+    sendZmq (PostAccountsR k newAcc) $
         \(JsonWithKeyRing _ acc) -> putStr $ printAccount acc
   where
     newAcc = NewAccount (pack name) (AccountRegular False) []
@@ -126,7 +126,7 @@ cmdNewMS r name mStr nStr ks = case keysM of
     Just keys -> do
         k <- R.asks configKeyRing
         let newAcc = NewAccount (pack name) (AccountMultisig r m n) keys
-        sendZmq (PostAccountsR k newAcc) $ 
+        sendZmq (PostAccountsR k newAcc) $
             \(JsonWithKeyRing _ acc) -> putStr $ printAccount acc
     _ -> error "Could not parse key(s)"
   where
@@ -139,7 +139,7 @@ cmdNewRead name keyStr = case keyM of
     Just key -> do
         k <- R.asks configKeyRing
         let newAcc = NewAccount (pack name) (AccountRegular True) [key]
-        sendZmq (PostAccountsR k newAcc) $ 
+        sendZmq (PostAccountsR k newAcc) $
             \(JsonWithKeyRing _ acc) -> putStr $ printAccount acc
     _ -> error "Could not parse key"
   where
@@ -149,7 +149,7 @@ cmdAddKeys :: String -> [String] -> Handler ()
 cmdAddKeys name ks = case keysM of
     Just keys -> do
         k <- R.asks configKeyRing
-        sendZmq (PostAccountKeysR k (pack name) keys) $ 
+        sendZmq (PostAccountKeysR k (pack name) keys) $
             \(JsonWithKeyRing _ acc) -> putStr $ printAccount acc
     _ -> error "Could not parse key(s)"
   where
@@ -158,15 +158,15 @@ cmdAddKeys name ks = case keysM of
 cmdSetGap :: String -> String -> Handler ()
 cmdSetGap name gap = do
     k <- R.asks configKeyRing
-    sendZmq (PostAccountGapR k (pack name) setGap) $ 
+    sendZmq (PostAccountGapR k (pack name) setGap) $
         \(JsonWithKeyRing _ acc) -> putStr $ printAccount acc
   where
-    setGap = SetAccountGap $ read gap 
+    setGap = SetAccountGap $ read gap
 
 cmdAccount :: String -> Handler ()
 cmdAccount name = do
     k <- R.asks configKeyRing
-    sendZmq (GetAccountR k $ pack name) $ 
+    sendZmq (GetAccountR k $ pack name) $
         \(JsonWithKeyRing _ acc) -> putStr $ printAccount acc
 
 cmdAccounts :: Handler ()
@@ -204,14 +204,14 @@ cmdUnused :: String -> Handler ()
 cmdUnused name = do
     k <- R.asks configKeyRing
     t <- R.asks configAddrType
-    sendZmq (GetAddressesUnusedR k (pack name) t) $ 
+    sendZmq (GetAddressesUnusedR k (pack name) t) $
         \(JsonWithAccount _ _ as) -> forM_ as $ putStrLn . printAddress
 
 cmdLabel :: String -> String -> String -> Handler ()
 cmdLabel name iStr label = do
     k <- R.asks configKeyRing
     t <- R.asks configAddrType
-    sendZmq (PutAddressR k (pack name) i t addrLabel) $ 
+    sendZmq (PutAddressR k (pack name) i t addrLabel) $
         \(JsonWithAccount _ _ a) -> putStrLn $ printAddress a
   where
     i         = read iStr
@@ -251,7 +251,7 @@ cmdSendMany name xs = case rcpsM of
         minconf <- R.asks configMinConf
         sign    <- R.asks configSignTx
         let action = CreateTx rcps fee minconf rcptFee sign
-        sendZmq (PostTxsR k (pack name) action) $ 
+        sendZmq (PostTxsR k (pack name) action) $
             \(JsonWithAccount _ _ tx) -> putStr $ printTx tx
     _ -> error "Could not parse recipient information"
   where
@@ -264,8 +264,8 @@ cmdImport :: String -> String -> Handler ()
 cmdImport name txStr = case txM of
     Just tx -> do
         k <- R.asks configKeyRing
-        let action = ImportTx tx 
-        sendZmq (PostTxsR k (pack name) action) $ 
+        let action = ImportTx tx
+        sendZmq (PostTxsR k (pack name) action) $
             \(JsonWithAccount _ _ tx) -> putStr $ printTx tx
     _ -> error "Could not parse transaction"
   where
@@ -276,7 +276,7 @@ cmdSign name txidStr = case txidM of
     Just txid -> do
         k <- R.asks configKeyRing
         let action = SignTx txid
-        sendZmq (PostTxsR k (pack name) action) $ 
+        sendZmq (PostTxsR k (pack name) action) $
             \(JsonWithAccount _ _ tx) -> putStr $ printTx tx
     _ -> error "Could not parse txid"
   where
@@ -286,11 +286,11 @@ cmdGetOffline :: String -> String -> Handler ()
 cmdGetOffline name tidStr = case tidM of
     Just tid -> do
         k <- R.asks configKeyRing
-        sendZmq (GetOfflineTxR k (pack name) tid) $ 
+        sendZmq (GetOfflineTxR k (pack name) tid) $
             \(OfflineTxData tx dat) -> do
-                putStrLn $ unwords 
+                putStrLn $ unwords
                     [ "Tx      :", bsToHex $ encode' tx ]
-                putStrLn $ unwords 
+                putStrLn $ unwords
                     [ "CoinData:", bsToHex $ toStrictBS $ encode dat ]
     _ -> error "Could not parse txid"
   where
@@ -300,13 +300,13 @@ cmdSignOffline :: String -> String -> String -> Handler ()
 cmdSignOffline name txStr datStr = case (txM, datM) of
     (Just tx, Just dat) -> do
         k <- R.asks configKeyRing
-        sendZmq (PostOfflineTxR k (pack name) tx dat) $ 
+        sendZmq (PostOfflineTxR k (pack name) tx dat) $
             \(TxCompleteRes tx' c) -> do
                 putStrLn $ unwords [ "Tx      :", bsToHex $ encode' tx' ]
                 putStrLn $ unwords [ "Complete:", if c then "Yes" else "No" ]
     _ -> error "Could not decode input data"
   where
-    datM = decode . toLazyBS =<< hexToBS datStr 
+    datM = decode . toLazyBS =<< hexToBS datStr
     txM  = decodeToMaybe =<< hexToBS txStr
 
 cmdBalance :: String -> Handler ()
@@ -314,7 +314,7 @@ cmdBalance name = do
     k <- R.asks configKeyRing
     m <- R.asks configMinConf
     o <- R.asks configOffline
-    sendZmq (GetBalanceR k (pack name) m o) $ 
+    sendZmq (GetBalanceR k (pack name) m o) $
         \(JsonWithAccount _ _ bal) ->
             putStrLn $ unwords [ "Balance:", show (bal :: Word64) ]
 
@@ -366,7 +366,7 @@ cmdStatus = sendZmq (PostNodeR NodeActionStatus) $ \Null -> return ()
 
 {- Helpers -}
 
-sendZmq :: (FromJSON a, ToJSON a) 
+sendZmq :: (FromJSON a, ToJSON a)
         => WalletRequest -> (a -> IO ()) -> Handler ()
 sendZmq req handle = do
     sockName <- R.asks configConnect
@@ -384,7 +384,7 @@ sendZmq req handle = do
     formatOutput a format = liftIO $ case format of
         OutputJSON   -> formatStr $ bsToString $ toStrictBS $
             JSON.encodePretty' JSON.defConfig{ JSON.confIndent = 2 } a
-        OutputYAML   -> formatStr $ 
+        OutputYAML   -> formatStr $
             bsToString $ YAML.encode a
         OutputNormal -> handle a
 
@@ -399,10 +399,10 @@ encodeTxJSON tx@(Tx v is os i) = object
     , "outputs"  .= zipWith output os [0..]
     , "locktime" .= i
     ]
-  where 
-    input x j = object 
+  where
+    input x j = object
       [pack ("input " ++ show (j :: Int)) .= encodeTxInJSON x]
-    output x j = object 
+    output x j = object
       [pack ("output " ++ show (j :: Int)) .= encodeTxOutJSON x]
 
 encodeTxInJSON :: TxIn -> Value
@@ -412,7 +412,7 @@ encodeTxInJSON (TxIn o s i) = object $
     , "raw-script" .= bsToHex s
     , "script"     .= encodeScriptJSON sp
     ] ++ decoded
-  where 
+  where
     sp = fromMaybe (Script []) $ decodeToMaybe s
     decoded = either (const []) f $ decodeInputBS s
     f inp = ["decoded-script" .= encodeScriptInputJSON inp]
@@ -422,11 +422,11 @@ encodeTxOutJSON (TxOut v s) = object $
     [ "value"      .= v
     , "raw-script" .= bsToHex s
     , "script"     .= encodeScriptJSON sp
-    ] ++ decoded 
-  where 
+    ] ++ decoded
+  where
     sp = fromMaybe (Script []) $ decodeToMaybe s
     decoded = either (const [])
-                 (\out -> ["decoded-script" .= encodeScriptOutputJSON out]) 
+                 (\out -> ["decoded-script" .= encodeScriptOutputJSON out])
                  (decodeOutputBS s)
 
 encodeOutPointJSON :: OutPoint -> Value
@@ -436,25 +436,25 @@ encodeOutPointJSON (OutPoint h i) = object
     ]
 
 encodeScriptJSON :: Script -> Value
-encodeScriptJSON (Script ops) = 
+encodeScriptJSON (Script ops) =
     toJSON $ map f ops
   where
-    f (OP_PUSHDATA bs _) = String $ pack $ unwords 
+    f (OP_PUSHDATA bs _) = String $ pack $ unwords
         ["OP_PUSHDATA", bsToHex bs]
     f x = String $ pack $ show x
 
 encodeScriptInputJSON :: ScriptInput -> Value
 encodeScriptInputJSON si = case si of
-    RegularInput (SpendPK s) -> object 
+    RegularInput (SpendPK s) -> object
         [ "spendpubkey" .= object [ "sig" .= encodeSigJSON s ] ]
-    RegularInput (SpendPKHash s p) -> object 
+    RegularInput (SpendPKHash s p) -> object
         [ "spendpubkeyhash" .= object
             [ "sig"            .= encodeSigJSON s
             , "pubkey"         .= bsToHex (encode' p)
             , "sender-address" .= addrToBase58 (pubKeyAddr p)
             ]
         ]
-    RegularInput (SpendMulSig sigs) -> object 
+    RegularInput (SpendMulSig sigs) -> object
         [ "spendmulsig" .= object [ "sigs" .= map encodeSigJSON sigs ] ]
     ScriptHashInput s r -> object
         [ "spendscripthash" .= object
@@ -469,19 +469,19 @@ encodeScriptOutputJSON :: ScriptOutput -> Value
 encodeScriptOutputJSON so = case so of
     PayPK p -> object
         [ "pay2pubkey" .= object [ "pubkey" .= bsToHex (encode' p) ] ]
-    PayPKHash a -> object 
+    PayPKHash a -> object
         [ "pay2pubkeyhash" .= object
             [ "address-base64" .= bsToHex (encode' $ getAddrHash a)
             , "address-base58" .= addrToBase58 a
             ]
         ]
-    PayMulSig ks r -> object 
+    PayMulSig ks r -> object
         [ "pay2mulsig" .= object
             [ "required-keys" .= r
             , "pubkeys"       .= map (bsToHex . encode') ks
             ]
         ]
-    PayScriptHash a -> object 
+    PayScriptHash a -> object
         [ "pay2scripthash" .= object
             [ "address-base64" .= bsToHex (encode' $ getAddrHash a)
             , "address-base58" .= addrToBase58 a
@@ -515,12 +515,12 @@ encodeSigHashJSON sh = case sh of
         ]
 
 {- Print utilities -}
- 
+
 printKeyRing :: JsonKeyRing -> String
 printKeyRing JsonKeyRing{..} = unlines $
     [ "KeyRing: " ++ unpack jsonKeyRingName ]
     ++
-    [ "Master key: " ++ xPrvExport (fromJust jsonKeyRingMaster) 
+    [ "Master key: " ++ xPrvExport (fromJust jsonKeyRingMaster)
     | isJust jsonKeyRingMaster
     ]
     ++
@@ -533,9 +533,9 @@ printAccount JsonAccount{..} = unlines $
     [ "Account: " ++ unpack jsonAccountName
     , "Type   : " ++ showType
     , "Gap    : " ++ show jsonAccountGap
-    ] 
+    ]
     ++
-    [ "Deriv  : " ++ show (fromJust jsonAccountDerivation) 
+    [ "Deriv  : " ++ show (fromJust jsonAccountDerivation)
     | isJust jsonAccountDerivation
     ]
     ++
@@ -554,13 +554,13 @@ printAccount JsonAccount{..} = unlines $
 printAddress :: JsonAddr -> String
 printAddress JsonAddr{..} = unwords $
     [ show jsonAddrIndex, ":", addrToBase58 jsonAddrAddress ]
-    ++ 
+    ++
     [ "(" ++ unpack jsonAddrLabel ++ ")" | not (null $ unpack jsonAddrLabel) ]
-    ++ concat 
+    ++ concat
     ( [ [ "[Received: " ++ show (balanceInfoInBalance bal)   ++ "]"
         , "[Coins: "  ++ show (balanceInfoCoins bal)  ++ "]"
         , "[Spent Coins: " ++ show (balanceInfoSpentCoins bal) ++ "]"
-        ] 
+        ]
         | isJust jsonAddrBalance && balanceInfoCoins bal > 0
       ]
     )
@@ -569,48 +569,48 @@ printAddress JsonAddr{..} = unwords $
 
 printTx :: JsonTx -> String
 printTx tx@JsonTx{..} = unlines $
-    [ "Value      : " ++ printTxType jsonTxType ++ " " ++ show jsonTxValue ] 
+    [ "Value      : " ++ printTxType jsonTxType ++ " " ++ show jsonTxValue ]
     ++
-    [ "Confidence : " ++ printTxConfidence tx ] 
-    ++ concat 
-    ( [ printAddrInfos "Inputs     : " jsonTxInputs 
-      | not (null jsonTxInputs) 
+    [ "Confidence : " ++ printTxConfidence tx ]
+    ++ concat
+    ( [ printAddrInfos "Inputs     : " jsonTxInputs
+      | not (null jsonTxInputs)
       ]
     )
     ++ concat
-    ( [ printAddrInfos "Outputs    : " jsonTxOutputs 
-      | not (null jsonTxOutputs) 
+    ( [ printAddrInfos "Outputs    : " jsonTxOutputs
+      | not (null jsonTxOutputs)
       ]
     )
     ++ concat
     ( [ printAddrInfos "Change     : " jsonTxChange
-      | not (null jsonTxChange) 
+      | not (null jsonTxChange)
       ]
     )
   where
-    printAddrInfos header xs = 
-        (header ++ f (head xs)) : 
+    printAddrInfos header xs =
+        (header ++ f (head xs)) :
         map (("             " ++) . f) (tail xs)
     f (AddressInfo addr valM local) = unwords $
         addrToBase58 addr :
         [ show (fromJust valM) | isJust valM ]
-        ++ 
+        ++
         [ if local then "<-" else "" ]
 
 printAddrTx :: AddrTx -> String
 printAddrTx (AddrTx tx BalanceInfo{..}) = unlines $
     concat (
-    [ [ "Incoming value: " ++ show balanceInfoInBalance 
+    [ [ "Incoming value: " ++ show balanceInfoInBalance
       , "Incoming coins: " ++ show balanceInfoCoins
       ]
-      | balanceInfoInBalance > 0 
+      | balanceInfoInBalance > 0
     ] ) ++ concat (
-    [ [ "Outgoing value: " ++ show balanceInfoOutBalance 
+    [ [ "Outgoing value: " ++ show balanceInfoOutBalance
       , "Spent coins   : " ++ show balanceInfoSpentCoins
       ]
-      | balanceInfoOutBalance > 0 
+      | balanceInfoOutBalance > 0
     ] ) ++
-    [ "Confidence      : " ++ printTxConfidence tx ] 
+    [ "Confidence      : " ++ printTxConfidence tx ]
 
 printTxConfidence :: JsonTx -> String
 printTxConfidence JsonTx{..} = case jsonTxConfidence of

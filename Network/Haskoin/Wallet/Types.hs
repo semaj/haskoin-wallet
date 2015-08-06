@@ -62,7 +62,7 @@ import Data.List.Split (splitOn)
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as C (pack, unpack)
 import qualified Data.ByteString.Lazy as L
-import Data.Aeson.Types 
+import Data.Aeson.Types
     ( Options(..)
     , SumEncoding(..)
     , defaultOptions
@@ -85,7 +85,7 @@ import Data.Aeson
 import Database.Persist.Class
     ( PersistField
     , toPersistValue
-    , fromPersistValue 
+    , fromPersistValue
     )
 import Database.Persist.Types (PersistValue(..))
 import Database.Persist.Sql (PersistFieldSql, SqlType(..), sqlType)
@@ -118,7 +118,7 @@ $(deriveJSON (dropSumLabels 2 0 "") ''TxType)
 
 data TxConfidence
     = TxOffline
-    | TxDead 
+    | TxDead
     | TxPending
     | TxBuilding
     deriving (Eq, Show, Read)
@@ -170,9 +170,9 @@ $(deriveJSON (dropFieldLabel 10) ''NewKeyRing)
 data AccountType
     = AccountRegular
         { accountTypeRead         :: !Bool }
-    | AccountMultisig 
+    | AccountMultisig
         { accountTypeRead         :: !Bool
-        , accountTypeRequiredSigs :: !Int 
+        , accountTypeRequiredSigs :: !Int
         , accountTypeTotalKeys    :: !Int
         }
     deriving (Eq, Show, Read)
@@ -196,7 +196,7 @@ instance ToJSON AccountType where
             ]
 
 instance FromJSON AccountType where
-    parseJSON = withObject "AccountType" $ \o -> 
+    parseJSON = withObject "AccountType" $ \o ->
         o .: "type" >>= \t -> case (t :: Text) of
             "regular"  -> AccountRegular <$> o .: "readonly"
             "multisig" -> AccountMultisig <$> o .: "readonly"
@@ -230,8 +230,8 @@ $(deriveJSON (dropFieldLabel 0) ''PageRequest)
 validPageRequest :: PageRequest -> Bool
 validPageRequest PageRequest{..} = pageNum >= 1 && pageLen >= 1
 
-data CoinSignData = CoinSignData 
-    { coinSignOutPoint     :: !OutPoint 
+data CoinSignData = CoinSignData
+    { coinSignOutPoint     :: !OutPoint
     , coinSignScriptOutput :: !ScriptOutput
     , coinSignDeriv        :: !SoftPath
     }
@@ -247,16 +247,16 @@ data OfflineTxData = OfflineTxData
 $(deriveJSON (dropFieldLabel 13) ''OfflineTxData)
 
 data TxAction
-    = CreateTx 
-        { accTxActionRecipients :: ![(Address, Word64)] 
+    = CreateTx
+        { accTxActionRecipients :: ![(Address, Word64)]
         , accTxActionFee        :: !Word64
         , accTxActionMinConf    :: !Word32
         , accTxActionRcptFee    :: !Bool
         , accTxActionSign       :: !Bool
         }
-    | ImportTx 
+    | ImportTx
         { accTxActionTx :: !Tx }
-    | SignTx 
+    | SignTx
         { accTxActionHash :: !TxHash }
     deriving (Eq, Show)
 
@@ -301,7 +301,7 @@ data AddressLabel = AddressLabel { addressLabelLabel :: !Text }
 
 $(deriveJSON (dropFieldLabel 12) ''AddressLabel)
 
-data NodeAction 
+data NodeAction
     = NodeActionRescan { nodeActionTimestamp :: !(Maybe Word32) }
     | NodeActionStatus
     deriving (Eq, Show, Read)
@@ -342,7 +342,7 @@ data WalletRequest
     | GetAccountR !KeyRingName !AccountName
     | PostAccountKeysR !KeyRingName !AccountName ![XPubKey]
     | PostAccountGapR !KeyRingName !AccountName !SetAccountGap
-    | GetAddressesR !KeyRingName !AccountName 
+    | GetAddressesR !KeyRingName !AccountName
         !AddressType !Word32 !Bool !PageRequest
     | GetAddressesUnusedR !KeyRingName !AccountName !AddressType
     | GetAddressR !KeyRingName !AccountName !KeyIndex !AddressType
@@ -352,15 +352,16 @@ data WalletRequest
     | GetAddrTxsR !KeyRingName !AccountName !KeyIndex !AddressType !PageRequest
     | PostTxsR !KeyRingName !AccountName !TxAction
     | GetTxR !KeyRingName !AccountName !TxHash
+    | RmTxR !KeyRingName !AccountName !TxHash
     | GetOfflineTxR !KeyRingName !AccountName !TxHash
     | PostOfflineTxR !KeyRingName !AccountName !Tx ![CoinSignData]
     | GetBalanceR !KeyRingName !AccountName !Word32 !Bool
     | PostNodeR !NodeAction
 
 -- TODO: Set omitEmptyContents on aeson-0.9
-$(deriveJSON 
-    defaultOptions 
-        { constructorTagModifier = map toLower . init 
+$(deriveJSON
+    defaultOptions
+        { constructorTagModifier = map toLower . init
         , sumEncoding = defaultTaggedObject
             { tagFieldName      = "method"
             , contentsFieldName = "request"
@@ -373,8 +374,8 @@ $(deriveJSON
 
 data JsonKeyRing = JsonKeyRing
     { jsonKeyRingName     :: !Text
-    , jsonKeyRingMaster   :: !(Maybe XPrvKey) 
-    , jsonKeyRingMnemonic :: !(Maybe Mnemonic) 
+    , jsonKeyRingMaster   :: !(Maybe XPrvKey)
+    , jsonKeyRingMnemonic :: !(Maybe Mnemonic)
     , jsonKeyRingCreated  :: !UTCTime
     }
     deriving (Eq, Show, Read)
@@ -389,8 +390,8 @@ data JsonWithKeyRing a = JsonWithKeyRing
 $(deriveJSON (dropFieldLabel 11) ''JsonWithKeyRing)
 
 data JsonAccount = JsonAccount
-    { jsonAccountName       :: !Text 
-    , jsonAccountType       :: !AccountType 
+    { jsonAccountName       :: !Text
+    , jsonAccountType       :: !AccountType
     , jsonAccountDerivation :: !(Maybe HardPath)
     , jsonAccountKeys       :: ![XPubKey]
     , jsonAccountGap        :: !Word32
@@ -435,9 +436,9 @@ data JsonWithAddr a = JsonWithAddr
 $(deriveJSON (dropFieldLabel 8) ''JsonWithAddr)
 
 data JsonTx = JsonTx
-    { jsonTxHash            :: !TxHash 
-    , jsonTxNosigHash       :: !TxHash 
-    , jsonTxType            :: !TxType 
+    { jsonTxHash            :: !TxHash
+    , jsonTxNosigHash       :: !TxHash
+    , jsonTxType            :: !TxType
     , jsonTxInValue         :: !Word64
     , jsonTxOutValue        :: !Word64
     , jsonTxValue           :: !Int64
@@ -446,14 +447,14 @@ data JsonTx = JsonTx
     , jsonTxChange          :: ![AddressInfo]
     , jsonTxTx              :: !Tx
     , jsonTxIsCoinbase      :: !Bool
-    , jsonTxConfidence      :: !TxConfidence 
+    , jsonTxConfidence      :: !TxConfidence
     , jsonTxConfirmedBy     :: !(Maybe BlockHash)
     , jsonTxConfirmedHeight :: !(Maybe Word32)
     , jsonTxConfirmedDate   :: !(Maybe Word32)
     , jsonTxCreated         :: !UTCTime
     -- Optional confirmation
     , jsonTxConfirmations   :: !(Maybe Word32)
-    } 
+    }
     deriving (Eq, Show, Read)
 
 $(deriveJSON (dropFieldLabel 6) ''JsonTx)
@@ -485,7 +486,7 @@ data AddrTx = AddrTx
 $(deriveJSON (dropFieldLabel 6) ''AddrTx)
 
 data TxCompleteRes = TxCompleteRes
-    { txCompleteTx       :: !Tx 
+    { txCompleteTx       :: !Tx
     , txCompleteComplete :: !Bool
     } deriving (Eq, Show, Read)
 
@@ -521,7 +522,7 @@ instance Exception WalletException
 
 instance PersistField XPrvKey where
     toPersistValue = PersistByteString . C.pack . xPrvExport
-    fromPersistValue (PersistByteString bs) = 
+    fromPersistValue (PersistByteString bs) =
         maybeToEither "Invalid Persistent XPrvKey" $ xPrvImport $ C.unpack bs
     fromPersistValue _ = Left "Invalid Persistent XPrvKey"
 
@@ -539,7 +540,7 @@ instance PersistFieldSql [XPubKey] where
 
 instance PersistField DerivPath where
     toPersistValue = PersistByteString . C.pack . show
-    fromPersistValue (PersistByteString bs) = 
+    fromPersistValue (PersistByteString bs) =
         maybeToEither "Invalid Persistent DerivPath" $ parsePath $ C.unpack bs
     fromPersistValue _ = Left "Invalid Persistent DerivPath"
 
@@ -548,7 +549,7 @@ instance PersistFieldSql DerivPath where
 
 instance PersistField HardPath where
     toPersistValue = PersistByteString . C.pack . show
-    fromPersistValue (PersistByteString bs) = 
+    fromPersistValue (PersistByteString bs) =
         maybeToEither "Invalid Persistent HardPath" $ parseHard $ C.unpack bs
     fromPersistValue _ = Left "Invalid Persistent HardPath"
 
@@ -557,7 +558,7 @@ instance PersistFieldSql HardPath where
 
 instance PersistField SoftPath where
     toPersistValue = PersistByteString . C.pack . show
-    fromPersistValue (PersistByteString bs) = 
+    fromPersistValue (PersistByteString bs) =
         maybeToEither "Invalid Persistent SoftPath" $ parseSoft $ C.unpack bs
     fromPersistValue _ = Left "Invalid Persistent SoftPath"
 
@@ -616,7 +617,7 @@ instance PersistFieldSql Address where
 
 instance PersistField BloomFilter where
     toPersistValue = PersistByteString . encode'
-    fromPersistValue (PersistByteString bs) = 
+    fromPersistValue (PersistByteString bs) =
         maybeToEither "Invalid Persistent BloomFilter" $ decodeToMaybe bs
     fromPersistValue _ = Left "Invalid Persistent BloomFilter"
 
@@ -636,7 +637,7 @@ instance PersistFieldSql BlockHash where
 instance PersistField TxHash where
     toPersistValue = PersistByteString . C.pack . encodeTxHashLE
     fromPersistValue (PersistByteString h) =
-        maybeToEither "Invalid Persistent TxHash" $ 
+        maybeToEither "Invalid Persistent TxHash" $
             decodeTxHashLE $ C.unpack h
     fromPersistValue _ = Left "Invalid Persistent TxHash"
 
@@ -657,13 +658,13 @@ instance PersistField TxConfidence where
         "building" -> return TxBuilding
         _ -> Left "Invalid Persistent TxConfidence"
     fromPersistValue _ = Left "Invalid Persistent TxConfidence"
-        
+
 instance PersistFieldSql TxConfidence where
     sqlType _ = SqlString
 
 instance PersistField Tx where
     toPersistValue = PersistByteString . encode'
-    fromPersistValue (PersistByteString bs) = 
+    fromPersistValue (PersistByteString bs) =
         maybeToEither "Invalid Persistent Tx" $ decodeToMaybe bs
     fromPersistValue _ = Left "Invalid Persistent Tx"
 

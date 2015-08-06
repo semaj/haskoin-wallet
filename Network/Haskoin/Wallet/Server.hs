@@ -19,10 +19,10 @@ import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans.Resource (MonadResource, runResourceT)
 import Control.DeepSeq (NFData(..), ($!!))
-import qualified Control.Exception as E 
+import qualified Control.Exception as E
     (SomeException(..), ErrorCall(..), Handler(..), catches)
 import qualified Control.Concurrent.MSem as Sem (MSem, new)
-import Control.Monad.Logger 
+import Control.Monad.Logger
     ( MonadLogger
     , runStdoutLoggingT
     , LogLevel(..)
@@ -41,7 +41,7 @@ import Data.Aeson (Value, toJSON, decode, encode)
 import Data.Conduit (Sink, awaitForever, ($$))
 import Data.Conduit.TMChan (TBMChan, sourceTBMChan)
 import Data.Word (Word32)
-import qualified Data.Map.Strict as M 
+import qualified Data.Map.Strict as M
     (Map, unionWith, null, toList, empty, fromListWith, assocs, elems)
 
 import Database.Persist (get)
@@ -66,7 +66,7 @@ import Network.Haskoin.Wallet.Server.Handler
 import Network.Haskoin.Wallet.Database
 
 data EventSession = EventSession
-    { eventBatchSize :: !Int 
+    { eventBatchSize :: !Int
     , eventNewAddrs  :: !(M.Map KeyRingAccountId Word32)
     }
     deriving (Eq, Show, Read)
@@ -87,7 +87,7 @@ initDatabase cfg = do
     pool <- getDatabasePool dbCfg
     -- Initialize wallet database
     runDBPool sem pool $ do
-        _ <- runMigration migrateWallet 
+        _ <- runMigration migrateWallet
         initWallet $ configBloomFP cfg
     -- Return the semaphrone and the connection pool
     return (sem, pool)
@@ -151,14 +151,14 @@ runSPVServer cfg = maybeDetach cfg $ do -- start the server process
                     NodeStartMerkleDownload dwnE
 
                 -- Listen to SPV events and update the wallet database
-                let eventSession = EventSession { eventBatchSize = 500 
+                let eventSession = EventSession { eventBatchSize = 500
                                                 , eventNewAddrs  = M.empty
                                                 }
                 -- Set the batch size to 500
                 liftIO . atomically $ writeTBMChan rChan $
                     NodeBatchSize $ eventBatchSize eventSession
 
-                let runEvents = sourceTBMChan eChan $$ 
+                let runEvents = sourceTBMChan eChan $$
                                 processEvents rChan sem pool
 
                 withAsync (evalStateT runEvents eventSession) $ \a -> do
@@ -184,7 +184,7 @@ processEvents rChan sem pool = awaitForever $ \req -> lift $ case req of
             else do
                 bloomM <- tryDBPool sem pool getBloomFilter
                 case bloomM of
-                    Just (bloom, _, _) -> liftIO . atomically $ 
+                    Just (bloom, _, _) -> liftIO . atomically $
                         writeTBMChan rChan $ NodeBloomFilter bloom
                     _ -> return ()
 
@@ -221,7 +221,7 @@ processEvents rChan sem pool = awaitForever $ \req -> lift $ case req of
         unless (M.null newAddrs) $ do
             bloomM <- tryDBPool sem pool getBloomFilter
             case bloomM of
-                Just (bloom, _, _) -> liftIO . atomically $ 
+                Just (bloom, _, _) -> liftIO . atomically $
                     writeTBMChan rChan $ NodeBloomFilter bloom
                 _ -> return ()
 
@@ -231,11 +231,11 @@ processEvents rChan sem pool = awaitForever $ \req -> lift $ case req of
         bSize <- gets eventBatchSize
         let newBSize | rescan    = max 1 $ bSize `div` 2
                      | otherwise = min 500 $ bSize + max 1 (bSize `div` 20)
-                
+
         when (newBSize /= bSize) $ do
             $(logDebug) $ pack $ unwords
                 [ "Changing block batch size from"
-                , show bSize, "to", show newBSize 
+                , show bSize, "to", show newBSize
                 ]
             liftIO . atomically $ writeTBMChan rChan $ NodeBatchSize newBSize
             modify' $ \s -> s{ eventBatchSize = newBSize }
@@ -245,7 +245,7 @@ processEvents rChan sem pool = awaitForever $ \req -> lift $ case req of
         let dwnStopped = any (not . null) mTxs
         -- Continue the download for the given block if the download is stopped
         -- or we need to rescan.
-        when (dwnStopped || rescan) $ liftIO . atomically $ 
+        when (dwnStopped || rescan) $ liftIO . atomically $
             writeTBMChan rChan $ NodeStartMerkleDownload $ Right bh
 
     WalletSynced -> do
@@ -293,7 +293,7 @@ runWalletApp :: forall m.
                 , MonadBase IO m
                 , MonadThrow m
                 , MonadResource m
-                ) 
+                )
              => HandlerSession -> m ()
 runWalletApp session = liftBaseOp withContext f
   where
@@ -311,7 +311,7 @@ runWalletApp session = liftBaseOp withContext f
         Just r  -> runHandler session $ dispatchRequest r
         Nothing -> return $ ResponseError "Could not decode request"
     catchErrors :: m (WalletResponse Value) -> m (WalletResponse Value)
-    catchErrors m = control $ \runInIO -> E.catches (runInIO m) 
+    catchErrors m = control $ \runInIO -> E.catches (runInIO m)
         [ E.Handler (\(WalletException err) -> runInIO
             (return $ ResponseError $ pack err :: m (WalletResponse Value)))
         , E.Handler (\(E.ErrorCall err) -> runInIO
@@ -327,7 +327,7 @@ dispatchRequest :: ( MonadLogger m
                    , MonadThrow m
                    , MonadResource m
                    , MonadIO m
-                   ) 
+                   )
                 => WalletRequest -> Handler m (WalletResponse Value)
 dispatchRequest req = liftM ResponseValid $ case req of
     GetKeyRingsR                     -> getKeyRingsR

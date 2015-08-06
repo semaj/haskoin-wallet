@@ -3,7 +3,7 @@ module Network.Haskoin.Wallet.Client (clientMain) where
 import System.FilePath ((</>))
 import System.Directory (createDirectoryIfMissing)
 import System.Posix.Directory (changeWorkingDirectory)
-import System.Posix.Files 
+import System.Posix.Files
     ( setFileMode
     , setFileCreationMask
     , unionFileModes
@@ -14,7 +14,7 @@ import System.Posix.Files
     )
 import System.Environment (getArgs, getEnv, lookupEnv)
 import System.Info (os)
-import System.Console.GetOpt 
+import System.Console.GetOpt
     ( getOpt
     , usageInfo
     , OptDescr (Option)
@@ -47,7 +47,7 @@ cmdHelp :: [String]
 cmdHelp = lines $ bsToString $ $(embedFile "config/help")
 
 warningMsg :: String
-warningMsg = unwords 
+warningMsg = unwords
     [ "!!!", "This software is experimental."
     , "Use only small amounts of Bitcoins.", "!!!"
     ]
@@ -61,15 +61,15 @@ options =
         (ReqArg (\s cfg -> cfg { configKeyRing = T.pack s }) "KEYRING") $
         "Which keyring to use (default: "
             ++ T.unpack (configKeyRing def) ++ ")"
-    , Option "c" ["count"] 
+    , Option "c" ["count"]
         (ReqArg (\s cfg -> cfg { configCount = read s }) "INT") $
         "Set the output size of some commands (default: "
             ++ show (configCount def) ++ ")"
-    , Option "m" ["minconf"] 
+    , Option "m" ["minconf"]
         (ReqArg (\s cfg -> cfg { configMinConf = read s }) "INT") $
         "Required minimum confirmations for balances (default: "
             ++ show (configMinConf def) ++ ")"
-    , Option "f" ["fee"] 
+    , Option "f" ["fee"]
         (ReqArg (\s cfg -> cfg { configFee = read s }) "INT") $
         "Fee per 1000 bytes for new transactions (default: "
             ++ show (configFee def) ++ ")"
@@ -144,7 +144,7 @@ getConfig fs = do
     let cfgFile = if isAbsolute (configFile initCfg)
                      then configFile initCfg
                      else dir </> configFile initCfg
-    
+
     -- Get configuration from file, if it exists
     e <- fileExist cfgFile
     if e then do
@@ -235,4 +235,4 @@ appDir = case os of "mingw"   -> windows
         case homeM of
             Just home -> return $ home </> ".hw"
             Nothing -> return "."
-        
+

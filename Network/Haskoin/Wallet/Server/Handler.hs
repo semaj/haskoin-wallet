@@ -495,10 +495,10 @@ rmTxR keyRingName name txid = do
         , "  Account name: " ++ unpack name
         , "  Txid        : " ++ encodeTxHashLE txid
         ]
-    runDB $ do
+    deleted <- runDB $ do
       (keyRing, Entity ai acc) <- getAccount keyRingName name
       deleteAccountTx ai txid
-    return $ Just $ toJSON ()
+    return $ Just $ toJSON deleted
 
 
 getTxR :: (MonadLogger m, MonadBaseControl IO m, MonadIO m)

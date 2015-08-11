@@ -332,7 +332,7 @@ cmdRmTx :: String -> String -> Handler ()
 cmdRmTx name tidStr = case tidM of
     Just tid -> do
       k <- R.asks configKeyRing
-      sendZmq (RmTxR k (pack name) tid) $ (\() -> (putStr $ "TX deleted."))
+      sendZmq (RmTxR k (pack name) tid) $ (\x -> if x == True then putStrLn "Transaction deleted.\n" else error "Tx must be Offline, Pending, or Dead.")
     _ -> error "Could not parse txid"
  where tidM = decodeTxHashLE tidStr
 

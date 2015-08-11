@@ -75,7 +75,7 @@ import Database.Esqueleto
     , SqlPersistT, Entity(..)
     , getBy, insertUnique, updateGet, replace, get, insertMany_, insert_
     )
-import qualified Database.Esqueleto as E (isNothing, delete)
+import qualified Database.Esqueleto as E (isNothing, deleteCount, delete)
 import Database.Esqueleto.Internal.Sql (SqlSelect)
 
 import Network.Haskoin.Block
@@ -262,14 +262,20 @@ getAccountTx ai txid = do
         _ -> liftIO . throwIO $ WalletException $ unwords
             [ "Transaction does not exist:", encodeTxHashLE txid ]
 
+-- Only allow deletion of 0 conf or offline txs
 deleteAccountTx :: MonadIO m
-             => KeyRingAccountId -> TxHash -> SqlPersistT m ()
+             => KeyRingAccountId -> TxHash -> SqlPersistT m Bool
 deleteAccountTx ai txid = do
-     E.delete $ from $ (\t -> do
-              where_ (    t ^. KeyRingTxAccount ==. val ai
+     count <- E.deleteCount $ from $ (\t -> do
+              where_ (t ^. KeyRingTxAccount ==. val ai
                       &&. t ^. KeyRingTxHash    ==. val txid
-                      )
-              return ())
+                      &&. (t ^. KeyRingTxConfidence ==. val TxOffline
+                           ||. t ^. KeyRingTxConfidence ==. val TxDead
+                           ||. t ^. KeyRingTxConfidence ==. val TxPending
+                          )
+                      ))
+     return (count == 1)
+
 
 -- Helper function to get all the pending transactions from the database. It is
 -- used to re-broadcast pending transactions in the wallet that have not been

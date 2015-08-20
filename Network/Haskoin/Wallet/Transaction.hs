@@ -274,7 +274,7 @@ deleteAccountTx ai txid = do
                            ||. t ^. KeyRingTxConfidence ==. val TxPending
                           )
                       ))
-     return (count == 1)
+     return $ count > 0
 
 
 -- Helper function to get all the pending transactions from the database. It is

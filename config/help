@@ -18,7 +18,7 @@ Account commands:
   accounts                                List all accounts in a keyring
   account   acc                           Display an account by name
 
-Address commands: 
+Address commands:
   list   acc [page] [-c pagesize] [-r]    Display addresses by page
   unused acc                              Display unused addresses
   label  acc index label                  Set the label of an address
@@ -32,6 +32,7 @@ Transaction commands:
   sign      acc txid                      Sign one of your offline transactions
   balance   acc [--minconf] [--offline]   Display account balance
   gettx     acc txid                      Get a transaction by txid
+  rmtx      acc txid                      Remove an offline, pending, or dead transaction
 
 Offline tx signing commands:
   getoffline  acc txhash                  Get data to sign a tx offline
@@ -39,7 +40,7 @@ Offline tx signing commands:
 
 Utility commands:
   decodetx tx                             Decode HEX transaction
-  rescan   [timestamp]                    Rescan the wallet 
+  rescan   [timestamp]                    Rescan the wallet
 
 Other commands:
   version                                 Display version information
